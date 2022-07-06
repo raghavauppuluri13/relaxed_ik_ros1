@@ -18,6 +18,7 @@ from timeit import default_timer as timer
 from urdf_load import urdf_load
 from visualization_msgs.msg import InteractiveMarkerFeedback, InteractiveMarkerUpdate
 
+
 class Opt(ctypes.Structure):
     _fields_ = [("data", ctypes.POINTER(ctypes.c_double)), ("length", ctypes.c_int)]
 
@@ -92,6 +93,9 @@ def main(args=None):
     delta_time = 0.01
     step = 1 / 30.0
 
+    new_state = (ctypes.c_double * 7)(*[0 * 7])
+    lib.update_joints(new_state)
+
     # Wait for the start signal
     print("Waiting for ROS param /simulation_time to be set as go...")
     initialized = False
@@ -102,6 +106,7 @@ def main(args=None):
         except KeyError:
             initialized = False
     print("ROS param /simulation_time is set up!\n")
+
 
     # If the input_device is keyboard
     if robot_info['input_device'] == 'keyboard': 
