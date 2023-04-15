@@ -2,7 +2,7 @@ __author__ = 'drakita'
 
 
 from urdf_parser_py.urdf import URDF
-from arm import *
+from relaxed_ik_ros1.arm import *
 
 
 # try:

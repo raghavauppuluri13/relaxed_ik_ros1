@@ -4,12 +4,12 @@ import csv
 import numpy
 import os
 import rospkg
-import transformations as T
+import relaxed_ik_ros1.transformations as T
 import yaml
 
 from geometry_msgs.msg import Pose
-from robot import Robot
-from urdf_load import urdf_load
+from relaxed_ik_ros1.robot import Robot
+from relaxed_ik_ros1.urdf_load import urdf_load
 
 path_to_src = rospkg.RosPack().get_path('relaxed_ik_ros1')
 
@@ -27,7 +27,7 @@ def get_ee_link(info_file_name):
     name = info_file_name.split('_')[0]
     ee_dict = {"ur5": ["ee_link"], "iiwa7": ["iiwa_link_ee"], "jaco7": ["j2s7s300_end_effector"], "hubo8": ["Body_RHAND"]}
     return ee_dict.get(name)
-    
+
 def read_cartesian_path(filename, scale=1.0):
     file = open(filename, 'r')
     lines = file.readlines()
@@ -55,7 +55,7 @@ def get_abs_waypoints(relative_waypoints, init_pose):
     waypoints = []
     for (time, relative_goal) in relative_waypoints:
         relative_orientation_goal = [relative_goal.orientation.w, relative_goal.orientation.x, relative_goal.orientation.y, relative_goal.orientation.z]
-        
+
         goal = Pose()
         goal.position.x = relative_goal.position.x + init_pose.position.x
         goal.position.y = relative_goal.position.y + init_pose.position.y
@@ -76,7 +76,7 @@ def linear_interpolate_waypoints(waypoints, keyframe):
         return waypoints[-1]
 
     floor = int(keyframe)
-        
+
     wpose = Pose()
     dx = waypoints[floor + 1][1].position.x - waypoints[floor][1].position.x
     wpose.position.x = waypoints[floor][1].position.x + (keyframe - floor) * dx
@@ -103,9 +103,9 @@ def linear_interpolate_joint_states(ja_stream_list, times):
     ja_stream = numpy.array(ja_stream_list)
     new_ja_stream = []
     ja_per_interval = times - 1
-    
+
     for i, ja in enumerate(ja_stream):
-        if i == 0: 
+        if i == 0:
             new_ja_stream.append(list(ja))
             continue
         for j in range(ja_per_interval):

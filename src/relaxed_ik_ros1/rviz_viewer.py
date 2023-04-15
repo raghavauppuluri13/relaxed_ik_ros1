@@ -13,9 +13,9 @@ import os
 import roslaunch
 import rospkg
 import rospy
-import utils
+import relaxed_ik_ros1.utils
 import tf
-import transformations as T
+import relaxed_ik_ros1.transformations as T
 import yaml
 
 from std_msgs.msg import ColorRGBA, Float64
@@ -46,7 +46,7 @@ def time_update_cb(msg):
 
 # def marker_feedback_cb(msg, args):
 #     server = args
-#     server.setPose(msg.marker_name, msg.pose)    
+#     server.setPose(msg.marker_name, msg.pose)
 #     server.applyChanges()
 
 def goal_marker_cb(msg, args):
@@ -62,15 +62,15 @@ def goal_marker_cb(msg, args):
     pose.orientation.x = rot_goal[1]
     pose.orientation.y = rot_goal[2]
     pose.orientation.z = rot_goal[3]
-    server.setPose("pose_goal", pose)    
+    server.setPose("pose_goal", pose)
     server.applyChanges()
 
 def print_cb(msg):
     p = msg.pose.position
     print(msg.marker_name + " is now at [" + str(p.x) + ", " + str(p.y) + ", " + str(p.z) + "]")
 
-def make_marker(name, fixed_frame, shape, scale, ts, quat, is_dynamic, 
-                points=None, color=[0.0,0.5,0.5,1.0], marker_scale=0.3):                
+def make_marker(name, fixed_frame, shape, scale, ts, quat, is_dynamic,
+                points=None, color=[0.0,0.5,0.5,1.0], marker_scale=0.3):
     int_marker = InteractiveMarker()
     int_marker.header.frame_id = fixed_frame
     int_marker.name = name
@@ -210,7 +210,7 @@ def set_collision_world(server, fixed_frame, env_settings):
     else:
         raise NameError('Please define the obstacles in the environment!')
 
-    if 'cuboids' in obstacles: 
+    if 'cuboids' in obstacles:
         cuboids = obstacles['cuboids']
         if cuboids is not None:
             for c in cuboids:
@@ -220,9 +220,9 @@ def set_collision_world(server, fixed_frame, env_settings):
                     is_dynamic = 1
                 else:
                     is_dynamic = 2
-                
+
                 c_quat = T.quaternion_from_euler(c['rotation'][0], c['rotation'][1], c['rotation'][2])
-                int_marker = make_marker(c['name'], fixed_frame, "cuboid", c['scale'], 
+                int_marker = make_marker(c['name'], fixed_frame, "cuboid", c['scale'],
                                         c['translation'], c_quat, is_dynamic)
                 server.insert(int_marker, print_cb)
                 if is_dynamic == 2:
@@ -241,7 +241,7 @@ def set_collision_world(server, fixed_frame, env_settings):
                     is_dynamic = 1
                 else:
                     is_dynamic = 2
-                int_marker = make_marker(s['name'], fixed_frame, "sphere", [s['scale']] * 3, 
+                int_marker = make_marker(s['name'], fixed_frame, "sphere", [s['scale']] * 3,
                                         s['translation'], [1.0,0.0,0.0,0.0], is_dynamic)
                 server.insert(int_marker, print_cb)
                 if is_dynamic == 2:
@@ -250,7 +250,7 @@ def set_collision_world(server, fixed_frame, env_settings):
                     waypoints = utils.get_abs_waypoints(relative_waypoints, int_marker.pose)
                     dyn_obs_handles.append((int_marker.name, waypoints))
 
-    if 'point_cloud' in obstacles: 
+    if 'point_cloud' in obstacles:
         point_cloud = obstacles['point_cloud']
         if point_cloud is not None:
             for pc in point_cloud:
@@ -267,7 +267,7 @@ def set_collision_world(server, fixed_frame, env_settings):
                             point.y = float(pt[1]) * pc_scale[1]
                             point.z = float(pt[2]) * pc_scale[2]
                             pc_points.append(point)
-                
+
                 if pc['animation'] == 'static':
                     is_dynamic = 0
                 elif pc['animation'] == 'interactive':
@@ -296,7 +296,7 @@ def main():
         info_file_name = env_settings['loaded_robot']['name']
     else:
         raise NameError("Please defined the loaded robot!")
-        
+
     info_file_path = path_to_src + '/relaxed_ik_core/config/info_files/' + info_file_name
     info_file = open(info_file_path, 'r')
 
@@ -334,10 +334,10 @@ def main():
 
     rospy.Subscriber('/relaxed_ik/ee_pose_goals', EEPoseGoals, goal_marker_cb, (server, init_pos, init_rot))
     rospy.Subscriber('/relaxed_ik/current_time', Float64, time_update_cb)
-    
+
     dyn_obs_handles = []
     args = rospy.myargv(argv=sys.argv)
-    if args[1] == "true": 
+    if args[1] == "true":
         dyn_obs_handles = set_collision_world(server, fixed_frame, env_settings)
 
     delta_time = 0.01
@@ -349,7 +349,7 @@ def main():
         tf_pub.sendTransform((0, 0, 0), tf.transformations.quaternion_from_euler(0, 0, 0),
                             rospy.Time.now(), 'common_world', fixed_frame)
 
-        try: 
+        try:
             param = rospy.get_param("simulation_time")
             initialized = param == "go"
         except KeyError:
@@ -385,7 +385,7 @@ def main():
                 js.position.append(x)
         js.header.stamp = rospy.Time.now()
         js_pub.publish(js)
-	
+
         rate.sleep()
 
 if __name__ == '__main__':
